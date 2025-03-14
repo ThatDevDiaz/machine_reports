@@ -117,5 +117,7 @@ __attribute__((constructor)) void init(){
 }
 EOF
 
+I kept trying "Cat root.txt" and after a minute it finally worked! 
 
+Root flag submitted to htb. Machine complete.
 
