@@ -41,7 +41,7 @@ After continously trying to automate file uploads using metasploit, they weren't
 
 the upload succeeded. Could not locate the uploaded file. Moved onto another vulnerability.
 
-After reading the github repository on CVE-2010-2861, I ran this command with the help of chatgpt:
+After reading a github repository on CVE-2010-2861, I ran this command with the help of chatgpt:
 curl -s "http://10.129.132.220:8500/CFIDE/administrator/enter.cfm?locale=../../../../../../../lib/password.properties%00en"
 and I was able to find passwords.
 
@@ -61,5 +61,14 @@ Dictionary cache hit:
 2f635f6d20e3fde0c53075a84b68fb07dcec9b03:happyday
 
 Login to admin panel with this password was a success.
+I was able to get a successful remote shell by going into the scheduled tasks section and creating a task.
+First, I created a shell.cfm file because its what coldfusion has permission to execute.
+I then created a powershell file that would create a reverse shell on port 4444 to my machine.
+The shell.cfm file would execute upon triggering, and it would open and auto-execute the powershell script.
+I uploaded both files to the scheduled tasks successfully and when executing shell.cfm from the browser and the listener on, it created the successful remote shell.
+
+After navigating around, I found the user tolis who had a flag user.txt on their desktop. User flag submitted. 
+
+
 
 
