@@ -58,3 +58,15 @@ This gave me gitea.db on my local machine which I then opened with sqlite to vie
 I was able to extract some hashes for administrator and developer from the gitea.db db:
 administrator|cba20ccf927d3ad0567b68161732d3fbca098ce886bbc923b4062a3960d459c08d2dfc063b2406ac9207c980c47c5d017136|2d149e5fbd1b20cf31db3e3c6a28fc9b
 developer|e531d398946137baea70ed6a680a54385ecff131309c0bd8f225f284406b7cbc8efc5dbef30bf1682619263444ea594cfb56|8bf3e3452b78544f8bee9400d6936d34
+
+The hash is using PBKDF2. After finding a python script online to crack this hash, the developer password is revealed to be:
+25282528
+
+Testing ssh on the developer account gives us a successful ssh login. Found the user flag:
+developer@titanic:~$ ls
+gitea  mysql  user.txt
+developer@titanic:~$ cat user.txt
+4177746b466d8f926ec557631ff3974c
+developer@titanic:~$
+
+Now with SSH access to the machine, we'll need to find a way to privilege escalate to root.
