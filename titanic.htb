@@ -6,8 +6,10 @@ We get a successful web server with limited functionality. Added the IP to /etc/
 
 Used whatweb to enumerate services:
 └─$ whatweb http://10.129.232.146/
-http://10.129.232.146/ [301 Moved Permanently] Apache[2.4.52], Country[RESERVED][ZZ], HTTPServer[Ubuntu Linux][Apache/2.4.52 (Ubuntu)], IP[10.129.232.146], RedirectLocation[http://titanic.htb/], Title[301 Moved Permanently]
-http://titanic.htb/ [200 OK] Bootstrap[4.5.2], Country[RESERVED][ZZ], HTML5, HTTPServer[Werkzeug/3.0.3 Python/3.10.12], IP[10.129.232.146], JQuery, Python[3.10.12], Script, Title[Titanic - Book Your Ship Trip], Werkzeug[3.0.3]
+http://10.129.232.146/ [301 Moved Permanently] Apache[2.4.52], Country[RESERVED][ZZ], HTTPServer[Ubuntu Linux][Apache/2.4.52 (Ubuntu)], IP[10.129.232.146], RedirectLocation[http://titanic.htb/], 
+Title[301 Moved Permanently]
+http://titanic.htb/ [200 OK] Bootstrap[4.5.2], Country[RESERVED][ZZ], HTML5, HTTPServer[Werkzeug/3.0.3 Python/3.10.12], IP[10.129.232.146], JQuery, Python[3.10.12], Script, Title[Titanic - 
+Book Your Ship Trip], Werkzeug[3.0.3]
 Server is running Werkzeug/3.0.3 and Python/3.10.12
 
 Found /download, /server-status/ and /book with gobuster. /download reveals that a ticket parameter is required. 
@@ -22,8 +24,30 @@ Tried other paths using LFI and no luck.
 
 Tried enumerating for subdomains and after a while I was able to locate dev.titanic.htb. I add to add this to my hosts file to resolve it.
 
-Opened the browser and was met with Gitea. Seems to be a version control website. I couldn't brute force the developer login,
+Opened the browser and was met with Gitea 1.22.1. Seems to be a version control website. I couldn't brute force the developer login,
 but I was able to create a user on the platform. 
+Gitea potentially vulnerable to CVE-2024-6886 which is an XSS attack.
 
+Metasploit has some modules for RCE on gitea. 
 
-  
+Upon looking around Gitea I found 2 repositories. One for Flask's config and one for the docker container that seems to have a sql database. 
+Here's some enumerated information from the repository:
+
+MYSQL_ROOT_PASSWORD: 'MySQLP@$$w0rd!'
+MYSQL_DATABASE: tickets
+MYSQL_USER: sql_svc
+MYSQL_PASSWORD: sql_password
+
+Mysql is runnng locally on 3306 and only open to localhost.
+
+For gitea's repository I found a volume location:
+/home/developer/gitea/data:/data
+
+I realized I could make reposities with my test user. Going to attempt to use webhooks or repository actions to create a reverse shell
+since I can't access the sql database from a non-localhost connection.
+
+Got error:
+"webook can only call allowed HTTP servers (Check your webhook ALLOWED_HOST_LIST setting), deny
+
+Reverse shell http listener did not work because of this. Trying to find a work-around
+
