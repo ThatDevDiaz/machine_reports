@@ -63,12 +63,29 @@ Dictionary cache hit:
 Login to admin panel with this password was a success.
 I was able to get a successful remote shell by going into the scheduled tasks section and creating a task.
 First, I created a shell.cfm file because its what coldfusion has permission to execute.
+
 I then created a powershell file that would create a reverse shell on port 4444 to my machine.
 The shell.cfm file would execute upon triggering, and it would open and auto-execute the powershell script.
-I uploaded both files to the scheduled tasks successfully and when executing shell.cfm from the browser and the listener on, it created the successful remote shell.
+I uploaded both files to the scheduled tasks successfully and when executing shell.cfm from the browser and the NC -lvnp 4444 listener on, 
+it created the successful remote shell.
 
-After navigating around, I found the user tolis who had a flag user.txt on their desktop. User flag submitted. 
+After navigating around, I found the user "tolis" who had a flag user.txt on their desktop. User flag submitted. 
 
+current shell is arctic\tolis
+systeminfo confirms:
+Windows 2008 server R2 6.1.76
+running on VMWare
 
+I went back and created the same reverse shell, but I setup metasploit as the listener so I can use metasploit on the shell.
 
+I backgrounded the session and used post/multi/recon/local_exploit_suggester Metasploit module to scan for exploits but nothing came up.
 
+After a very long frustrating session of trying to find ways to upload reverse shells that execute as system and running metasploit modules with
+no success, I decided to lookup some assistance (without looking up the full answer).
+
+I came across the tool "Chimichurri" which is used exactly for the very vulnerability this user is exposed to.
+
+Using chatgpt to learn how Chimichurri works and how to set it up, I was able to successful launch the reverse shell by sending the chimichurri exe
+to the target, then executing it with the already logged in user. This escalated me to system
+
+Root flag found. Machine owned.3
