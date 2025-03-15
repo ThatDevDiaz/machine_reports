@@ -179,4 +179,22 @@ returned lots of credentials. I knew to run this because chatgpt told me its whe
 Bob's credentials worked for SSH. User flag owned. 
 Time to privilege escalate.
 
+I re-created the SSH connection on metasploit using scanner/ssh/ssh_login.
+I upgraded the shell to a meterpreter session with multi/manage/shell_to_meterpreter
+Used this meterpreter shell to run local_exploit_suggester module.
 
+No useful vulnerabilities found.
+Found this when checking permissions:
+User bob may run the following commands on linkvortex:
+    (ALL) NOPASSWD: /usr/bin/bash /opt/ghost/clean_symlink.sh *.png
+
+After some research I concluded that to make this exploit work we need to execute a payload using the sudo permission we have,
+but we need to trick the script into not trashing the payload because of its content.
+
+Tbe solution was to create a text file with the desired path:
+ln -s /root/root.txt xyz.png
+
+Then, we execute the script and add the file path of our .png file. The symlink won't detect the payload because its .png
+
+Successful execution of this should print the root.txt file
+Flag captured. Machine pwnd.
