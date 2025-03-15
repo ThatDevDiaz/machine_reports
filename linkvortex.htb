@@ -1,0 +1,80 @@
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 3e:f8:b9:68:c8:eb:57:0f:cb:0b:47:b9:86:50:83:eb (ECDSA)
+|_  256 a2:ea:6e:e1:b6:d7:e7:c5:86:69:ce:ba:05:9e:38:13 (ED25519)
+80/tcp open  http    Apache httpd
+|_http-server-header: Apache
+|_http-title: Did not follow redirect to http://linkvortex.htb/
+
+Added linuxvortex.htb to the hosts file to resolve.
+
+while scanning with gobuster, I found /RSS was valid. Checked the url and was met with source code for the page.
+This revealed the service Ghost 5.58 was running.
+
+Starting gobuster in directory enumeration mode
+===============================================================
+/About                (Status: 200) [Size: 8284]
+/LICENSE              (Status: 200) [Size: 1065]
+/RSS                  (Status: 200) [Size: 26682]
+/about                (Status: 200) [Size: 8284]
+/favicon.ico          (Status: 200) [Size: 15406]
+/feed                 (Status: 200) [Size: 26682]
+/private              (Status: 200) [Size: 12148]
+/robots.txt           (Status: 200) [Size: 121]
+/rss                  (Status: 200) [Size: 26682]
+/server-status        (Status: 403) [Size: 199]
+/sitemap.xml          (Status: 200) [Size: 527]
+/unsubscribe          (Status: 400) [Size: 24]
+Progress: 4744 / 4745 (99.98%)
+===============================================================
+Finished
+
+Robots.txt revealed:
+Sitemap: http://linkvortex.htb/sitemap.xml
+Disallow: /ghost/
+Disallow: /p/
+Disallow: /email/
+Disallow: /r/
+
+
+Sign-up portal does not work.
+Server is running JQuery 3.5.1 and running on Express.
+
+linkvortex.htb/ghost/ worked and redirected me to a login
+linkvortex.htb/ghost/api/admin/session revealed some html giving me a permission denied error. Not sure how useful this is.
+
+Enumerated /ghost/ further and found /ghost/.well-known/jwks.json
+
+Found dev.linkvortex.htb but there's nothing here just a launch page. Going to directory scan this subdomain.
+Directory enumeration finds .git which I can now navigate around in.
+
+I was able to find .git/objects/pack which revealed 2 repository branch histories. I downloaded them both and searched for some keywords.
+
+I found a password:
+./ghost/core/test/utils/api.js:                grant_type: 'password',
+./ghost/core/test/utils/api.js:                password: 'Sl1m3rson99'
+
+
+Found a hash that kept repeating: 
+./ghost/core/test/utils/fixtures/export/v4_export.json:            "password": "$2a$10$GKFu8wxSXZNFF/cEmTE0/O1FZIz5uRGwlLmYKRicdCRR.bvBeBsJa",
+Cracking with John the ripper to test against known users.
+
+.git/logs/HEAD reveals a dev@linkvortex.htb account.
+
+after continously running grep commands to enumerate from these repositories, I found more credentials:
+./ghost/core/test/regression/api/admin/authentication.test.js:            const password = 'thisissupersafe';
+./ghost/security/lib/tokens.js:        const password = options.password;
+
+
+I used this opportunity to learn about githacker. I ran the repository through githacker and enumerated the .js file that was created. This 
+revealed mostly the same credentials i've already revealed through downloading the repository and using grep but this tool was much faster.
+
+Found more credentials using githack:
+const email = 'test@example.com';
+const password = 'OctopiFociPilfer45'
+
+The email to the password we found earlier is test-leo@example.com:thisissupersafe
+Seems we got a few emails and passwords, but nowhere to put them in.
+ghost login form is not accepting these emails as valid.
+  
