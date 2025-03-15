@@ -162,6 +162,21 @@ I was finally able to shell in.
 Running :
 /var/lib/ghost/config.production.json
 returned lots of credentials. I knew to run this because chatgpt told me its where ghost stores passwords.
- "user": "bob@linkvortex.htb",
- "pass": "fibber-talented-worth"
+
+"mail": {
+   "transport": "SMTP",
+   "options": {
+      "service": "Google",
+      "host": "linkvortex.htb",
+      "port": 587,
+      "auth": {
+        "user": "bob@linkvortex.htb",
+        "pass": "fibber-talented-worth"
+      }
+   }
+}
+
+Bob's credentials worked for SSH. User flag owned. 
+Time to privilege escalate.
+
 
