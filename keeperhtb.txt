@@ -81,9 +81,9 @@ Didn't work when trying to access /l/ which seems to be a log storage directory 
 The directory creates a new session cookie upon every attempt. Trying to use root cookies from
 /rt/ did not work to bypass the /l/ access denied restriction.
 
-I spent hours trying to figure out why I could not figure out any entry points. I went back to HTB
+I spent hours trying to figure out why I could not exploit any entry points. I went back to HTB
 and followed the "walkthrough" steps where you need to input the answers you find on your own. I noticed
-the step I was on, was the portion that required me to use the enumerated user's credentials to login to keeper.
+the step I was on was the portion that required me to use the enumerated user's credentials to login to keeper.
 But... wait a minute. I did try that. So I tried again on the website, no luck. Then, I tried SSH again,
 no luck. I looked up the solution because I was desperate to just learn what I was doing wrong.
 Upon reaching that part of the guide, I noticed they were able to login to this user's SSH. After some frustration,
