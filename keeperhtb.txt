@@ -38,6 +38,7 @@ over the other users.
 
 Before using hydra, I tried some super basic default credentials, and with success:
 root:password
+root session cookie: a054dcc60425d611
 These credentials worked for for the web app but not for SSH
 
 Found a ticket with the user:
@@ -64,6 +65,11 @@ session cookie, but only got a single result:
 [Status: 200, Size: 4239, Words: 409, Lines: 154, Duration: 427ms]
 | URL | http://tickets.keeper.htb/rt/NoAuth/Login.html?next=Copy of index.html
     * FUZZ: Copy of index.html
+
+This didn't return anything useful. Tried multiple directory traversal attempts with the LFI as well,
+but still nothing. Going to pivot and look for other vulnerabilities.
+
+
 
 
 
