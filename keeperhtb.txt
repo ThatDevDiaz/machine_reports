@@ -42,7 +42,7 @@ root session cookie: a054dcc60425d611
 These credentials worked for for the web app but not for SSH
 
 Found a ticket with the user:
-Inorgaard (Lisa Norgaard) : lnorgaard@keeper.htb
+lnorgaard (Lisa Norgaard) : lnorgaard@keeper.htb
 Found user creation history that shows their initial password was set to Welcome2023! 
 
 Configuration revealed database information:
@@ -69,7 +69,25 @@ session cookie, but only got a single result:
 This didn't return anything useful. Tried multiple directory traversal attempts with the LFI as well,
 but still nothing. Going to pivot and look for other vulnerabilities.
 
+There's a scripts page where scripts can be created and ran. I was able to bypass CSRF using the redirection
+url by manually typing the subdomain, but the scripts are not executing upon the actions I set.
 
+Found out I can upload files to tickets and clicking the file launches it successfully. Going to try
+uploading payloads.
 
+Current session cookie: e8f59d857f1f803e3da935531f1df871
 
+Didn't work when trying to access /l/ which seems to be a log storage directory location.
+The directory creates a new session cookie upon every attempt. Trying to use root cookies from
+/rt/ did not work to bypass the /l/ access denied restriction.
+
+I spent hours trying to figure out why I could not figure out any entry points. I went back to HTB
+and followed the "walkthrough" steps where you need to input the answers you find on your own. I noticed
+the step I was on, was the portion that required me to use the enumerated user's credentials to login to keeper.
+But... wait a minute. I did try that. So I tried again on the website, no luck. Then, I tried SSH again,
+no luck. I looked up the solution because I was desperate to just learn what I was doing wrong.
+Upon reaching that part of the guide, I noticed they were able to login to this user's SSH. After some frustration,
+I double checked the credentials and I realized I was typing in Welcome123! and not Welcome2023! #UserError
+
+Now we have a successful ssh as lnorgaard and the user flag. Time to privilege escalate.
 
