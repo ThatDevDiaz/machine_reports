@@ -50,10 +50,15 @@ databaseName 'rtdb'
 databaseUser 'rtuser'
 databaseAdmin 'postgres'
 
-Perl5 and Apache 2.4.52 discovered
+Perl 5.34 and Apache 2.4.52 discovered
 
 Tried adding a script but there is a CSRF protection in place that did not allow it. redirection
 url brings a 404 error. Maybe a session cookie exploit would work? 
+
+I try accessing the routes manually, but they all throw a 404 error. Not sure these functions even work.
+Seems like all creation/deletion actions throw this CSRF error.
+
+
 
 
   
