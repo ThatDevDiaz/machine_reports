@@ -1,0 +1,59 @@
+target: 10.129.229.41
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 35:39:d4:39:40:4b:1f:61:86:dd:7c:37:bb:4b:98:9e (ECDSA)
+|_  256 1a:e9:72:be:8b:b1:05:d5:ef:fe:dd:80:d8:ef:c0:66 (ED25519)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+
+no useful UDP ports found
+
+website has nothing but some html on the screen:
+To raise an IT support ticket, please visit tickets.keeper.htb/rt/
+http://tickets.keeper.htb/rt/
+Using Best practical ticketing system
+
+Found http://tickets.keeper.htb/m/
+but it seems to be a mobile version
+
+RT/4.4.4+dfsg-2ubuntu1 is the RT version
+
+Directory enumeration finds:
+/rt
+/rte
+/rtl
+/rtf
+and different file types for each path. none of these are accessible. rt/admin redirects back to login but it exists.
+
+Wappalyzer did not find any results for this webpage
+
+https://github.com/bestpractical/rt/releases
+The RT releases shows that one of the versions close to 4.4.4 is vulnerable to timing side-channel attacks. Because
+of this, I was able to enumerate the user root because it took about 30 milliseconds longer to return requests
+over the other users.
+
+Before using hydra, I tried some super basic default credentials, and with success:
+root:password
+These credentials worked for for the web app but not for SSH
+
+Found a ticket with the user:
+Inorgaard (Lisa Norgaard) : lnorgaard@keeper.htb
+Found user creation history that shows their initial password was set to Welcome2023! 
+
+Configuration revealed database information:
+port: 3306
+databaseName 'rtdb'
+databaseUser 'rtuser'
+databaseAdmin 'postgres'
+
+Perl5 and Apache 2.4.52 discovered
+
+Tried adding a script but there is a CSRF protection in place that did not allow it. redirection
+url brings a 404 error. Maybe a session cookie exploit would work? 
+
+
+  
