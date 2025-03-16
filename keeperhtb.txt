@@ -183,3 +183,5 @@ Press 'q' or Ctrl-C to abort, almost any other key for status
 0g 0:00:21:38 DONE (2025-03-16 06:23) 0g/s 770.2p/s 770.2c/s 770.2C/s vabatsh3..vaanes
 Session completed. 
 
+Attempting hashcat crack, but after realizing what kind of encryption it was using, I figured
+it might be a futile effort. Pivoting
