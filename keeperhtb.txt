@@ -58,7 +58,12 @@ url brings a 404 error. Maybe a session cookie exploit would work?
 I try accessing the routes manually, but they all throw a 404 error. Not sure these functions even work.
 Seems like all creation/deletion actions throw this CSRF error.
 
+I've been trying to use ffuf to figure out if the next parameter is exploitable with LFI using the admin
+session cookie, but only got a single result:
+
+[Status: 200, Size: 4239, Words: 409, Lines: 154, Duration: 427ms]
+| URL | http://tickets.keeper.htb/rt/NoAuth/Login.html?next=Copy of index.html
+    * FUZZ: Copy of index.html
 
 
 
-  
