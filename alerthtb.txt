@@ -1,1 +1,62 @@
+target: 10.129.58.212
+nmap -Pn -sS -sC -A -T4 10.129.58.212 -v 
 
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 7e:46:2c:46:6e:e6:d1:eb:2d:9d:34:25:e6:36:14:a7 (RSA)
+|   256 45:7b:20:95:ec:17:c5:b4:d8:86:50:81:e0:8c:e8:b8 (ECDSA)
+|_  256 cb:92:ad:6b:fc:c8:8e:5e:9f:8c:a2:69:1b:6d:d0:f7 (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+
+I noticed that the pages were redirecting index.php?page= which made me try some LFI commands.
+
+Used ffuf to automate fuzzing on this parameter while I scanned for more directories using gobuster.
+
+┌──(cesar㉿kali)-[/usr/share/wordlists]
+└─$ ffuf -u http://alert.htb/index.php?page=FUZZ -w /usr/share/wordlists/SecLists/Fuzzing/LFI/LFI-LFISuite-pathtotest-huge.txt -ac
+
+No results.
+
+Starting gobuster in directory enumeration mode
+===============================================================
+/.hta                 (Status: 403) [Size: 274]
+/.htaccess            (Status: 403) [Size: 274]
+/.htpasswd            (Status: 403) [Size: 274]
+/css                  (Status: 301) [Size: 304] [--> http://alert.htb/css/]
+/index.php            (Status: 302) [Size: 660] [--> index.php?page=alert]
+/messages             (Status: 301) [Size: 309] [--> http://alert.htb/messages/]
+/server-status        (Status: 403) [Size: 274]
+/uploads              (Status: 301) [Size: 308] [--> http://alert.htb/uploads/]
+Progress: 4614 / 4615 (99.98%)
+===============================================================
+Finished
+
+While scanning, I was looking around on the website and decided to test the upload functionality.
+It allows .md uploads. Then you can use the markdown reader button to execute the file.md.
+Tested a javascript by uploading it to a test.md file, and the javascript executed when visualizer.php rendered it.
+
+Markdown links work when uploading them through .md files.
+
+Continued enumeration for subdomains. 
+________________________________________________
+
+statistics              [Status: 401, Size: 467, Words: 42, Lines: 15, Duration: 60ms]
+:: Progress: [114441/114441] :: Job [1/1] :: 662 req/sec :: Duration: [0:03:29] :: Errors: 0 ::
+
+added statistics to the hosts file and attempted access
+statistics.alert.htb prompts a javascript login prompt
+
+CORS is not allowing the .md file uploads to process requests on this subdomain
+
+After spending a long time on statistics, I decided to go back to our .md file upload
+vector.
+
+I tried dozens of different payloads to see what would and wouldn't work. I wasn't
+able to enumerate much information nor could I get php to execute. Only JS.
+
+I was able to successfully redirect the visualizer.php connection to my personal
+python server which means redirections to malicious locations works.
+
+I've reached a wall. I believe I may not have enough knowledge yet to finish this box. I've created multiple http sessions that connect back to my machine and i've attempted to leverage this to extract data or run other commands, but I cannot get past the CORS error and I can't get any valuable data. Stepping away from the machine for now.
