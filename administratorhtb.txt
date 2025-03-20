@@ -40,3 +40,26 @@ domain name is administrator
 Downloaded Registry.pol from the SYSVOL share
 Nothing useful.
 
+┌─[us-dedivip-1]─[10.10.14.238]─[xixerd@htb-djymqdibte]─[~]
+└──╼ [★]$ ldapsearch -H ldap://htb0.local:389 -x -D "administrator\\olivia" -w ichliebedich -b "DC=administrator,DC=htb" "(objectClass=user)"
+# extended LDIF
+#
+# LDAPv3
+# base <DC=administrator,DC=htb> with scope subtree
+# filter: (objectClass=user)
+# requesting: ALL
+#
+
+Running this command returned valuable results. I used chatgpt to parse the information and summarize what was valuable:
+
+DC=administrator,DC=htb
+CN=DC,OU=Domain Controllers,DC=administrator,DC=htb
+Olivia Johnson	CN=Olivia Johnson, CN=Users, DC=administrator,DC=htb	Remote Management Users	userPrincipalName: olivia@administrator.htb
+Michael William CN=Michael Williams, CN=Users, DC=administrator,DC=htb	Remote Management Users	Standard user account
+Benjamin Brown	CN=Benjamin Brown, CN=Users, DC=administrator,DC=htb	Share Moderators	badPwdCount: 2 (failed logins noted)
+Emily Rodriguez	CN=Emily Rodriguez, CN=Users, DC=administrator,DC=htb	Remote Management Users	Standard user account
+Ethan Hunt	CN=Ethan Hunt, CN=Users, DC=administrator,DC=htb	– (No additional groups specified)	Standard user account
+Alexander Smith	CN=Alexander Smith, CN=Users, DC=administrator,DC=htb	– (No additional groups specified)	Standard user account
+Emma Johnson	CN=Emma Johnson, CN=Users, DC=administrator,DC=htb	– (No additional groups specified)	Standard user account
+
+
